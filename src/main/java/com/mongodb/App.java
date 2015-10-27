@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -20,7 +21,9 @@ public class App
     {
     //	lessonOne();
     //	lessonTwo();
-    	lessonThree();
+    //	lessonThree();
+    	sortDelete();
+    	
     }
     
     private static void lessonOne() 
@@ -98,5 +101,55 @@ public class App
     	
     }
     
+    private static void sortDelete()
+    {
+    	MongoClient client = new MongoClient();
+        MongoDatabase db = client.getDatabase("students");
+        MongoCollection<Document> coll = db.getCollection("grades");
+        
+        System.out.println(coll.count());
+        
+        long homeworks = coll.count(new Document("type", "homework"));
+        System.out.println(homeworks);
+        
+       /* List<Document> myList = coll.find(new Document("type", "homework")).
+        		sort(new Document("student_id", 1).append("score" , 1)).
+        		into(new ArrayList<Document>());
+        List<Document> shortList = new ArrayList<Document>();
+        int size = myList.size();
+        for (int i = size/2; i < size; i++) {
+        	shortList.add(myList.get(i));
+        	System.out.println(myList.get(i));
+        }
+        System.out.println(shortList.size());
+        
+        for (Document doc : shortList) {
+        //	coll.deleteOne(new Document("student_id", doc.getLong("student_id")));
+        }
+        */
+        
+        MongoCursor<Document> cur = coll.find(new Document("type", "homework")).
+        		sort(new Document("student_id", 1).append("score" , 1))
+        		.iterator();
+        try {
+        	while (cur.hasNext()) {
+        		Document current = cur.next();
+        		int st_id = current.getInteger("student_id");
+        		ObjectId doc_id = current.getObjectId("_id");
+        		
+        		Document nextOne = cur.next();
+        		int nx_st_id = nextOne.getInteger("student_id");
+        		if (nx_st_id == st_id) {
+        			coll.deleteOne(new Document("_id", doc_id));
+        		}
+        		        		
+        	}
+        } finally {
+        	cur.close();
+        }
+        		
+        System.out.println("result: " + coll.count());
+        
+    }
     
 }
