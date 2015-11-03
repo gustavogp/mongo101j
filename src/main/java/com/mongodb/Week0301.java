@@ -62,8 +62,6 @@ public class Week0301 {
         		System.out.println("newScores final: " + newScores.size());
         		
         		//update the scores of this student
-        		student.remove("scores");
-        		student.put("scores", newScores);
         		coll.updateOne(eq("_id", student.get("_id")), 
         				new Document("$set", new Document("scores", newScores)));
         		
